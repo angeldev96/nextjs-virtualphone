@@ -3242,7 +3242,7 @@
       "format": "cjs"
     },
     ".open-next/server-functions/default/node_modules/next/dist/server/load-manifest.external.js": {
-      "bytes": 19146,
+      "bytes": 19148,
       "imports": [
         {
           "path": "path",
@@ -6047,7 +6047,7 @@
       "format": "esm"
     },
     ".open-next/server-functions/default/index.mjs": {
-      "bytes": 74126,
+      "bytes": 74128,
       "imports": [
         {
           "path": "node:module",
@@ -7290,7 +7290,7 @@
           "bytesInOutput": 5657
         },
         ".open-next/server-functions/default/node_modules/next/dist/server/load-manifest.external.js": {
-          "bytesInOutput": 13416
+          "bytesInOutput": 13418
         },
         ".open-next/server-functions/default/.next/server/chunks/ssr/[turbopack]_runtime.js": {
           "bytesInOutput": 14536
@@ -7695,10 +7695,10 @@
           "bytesInOutput": 4946
         },
         ".open-next/server-functions/default/index.mjs": {
-          "bytesInOutput": 51582
+          "bytesInOutput": 51584
         }
       },
-      "bytes": 2415917
+      "bytes": 2415921
     }
   }
 }
