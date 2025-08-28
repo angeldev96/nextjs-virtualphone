@@ -1,5 +1,7 @@
 {
-  "framework": "next",
+  "cloud": {
+    "framework": "nextjs"
+  },
   "build": {
     "command": "npm run build",
     "output": ".next"
