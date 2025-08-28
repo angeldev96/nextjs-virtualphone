@@ -1,103 +1,188 @@
-import Image from "next/image";
+"use client";
+
+import React, { useState, useEffect, useRef } from 'react';
+import Screen from '../components/Screen';
+import Keypad from '../components/Keypad';
+import MessagingMenu from '../components/MessagingMenu';
+import ComposeMessage from '../components/ComposeMessage';
+
+const T9_MAP = {
+  '2': 'ABC',
+  '3': 'DEF',
+  '4': 'GHI',
+  '5': 'JKL',
+  '6': 'MNO',
+  '7': 'PQRS',
+  '8': 'TUV',
+  '9': 'WXYZ',
+  '0': ' ',
+  '1': '1',
+  '*': '*',
+  '#': '#',
+};
+
+// Main FlipPhone component
+const FlipPhone = () => {
+  const [currentScreen, setCurrentScreen] = useState('home'); // 'home', 'messaging', 'compose'
+  const [recipient, setRecipient] = useState('');
+  const [message, setMessage] = useState('');
+  const [activeInput, setActiveInput] = useState('recipient'); // 'recipient', 'message'
+  const [t9Timeout, setT9Timeout] = useState(null);
+  const [lastKey, setLastKey] = useState(null);
+  const [charIndex, setCharIndex] = useState(0);
+
+  const handleMsgClick = () => {
+    setCurrentScreen('messaging');
+  };
+
+  const handleKeyPress = (key) => {
+    if (activeInput === 'recipient') {
+      if (/\d/.test(key) || key === '*' || key === '#') {
+        setRecipient(prev => prev + key);
+      }
+      return;
+    }
+
+    const updater = setMessage;
+    const currentValue = message;
+
+    if (t9Timeout) {
+      clearTimeout(t9Timeout);
+    }
+
+    if (key === lastKey) {
+      const chars = T9_MAP[key];
+      const nextIndex = (charIndex + 1) % chars.length;
+      setCharIndex(nextIndex);
+      updater(currentValue.slice(0, -1) + chars[nextIndex]);
+    } else {
+      setCharIndex(0);
+      const chars = T9_MAP[key];
+      if (chars) {
+        updater(currentValue + chars[0]);
+      }
+    }
+
+    setLastKey(key);
+    setT9Timeout(setTimeout(() => {
+      setLastKey(null);
+      setCharIndex(0);
+    }, 1000));
+  };
+
+  const handleDelete = () => {
+    const updater = activeInput === 'recipient' ? setRecipient : setMessage;
+    updater(prev => prev.slice(0, -1));
+  };
+
+  const handleEndClick = () => {
+    setCurrentScreen('home');
+  };
+
+  const handleComposeClick = () => {
+    setCurrentScreen('compose');
+  };
+
+  const renderScreen = () => {
+    switch (currentScreen) {
+      case 'compose':
+        return <ComposeMessage
+                  recipient={recipient}
+                  message={message}
+                  activeInput={activeInput}
+                  onSetActiveInput={setActiveInput}
+                  setRecipient={setRecipient}
+                  setMessage={setMessage}
+                />;
+      case 'messaging':
+        return <MessagingMenu onComposeClick={handleComposeClick} />;
+      case 'home':
+      default:
+        return <Screen onMsgClick={handleMsgClick} />;
+    }
+  };
+
+  // Responsive scaling so the whole phone fits the viewport
+  const phoneRef = useRef(null);
+  const [scale, setScale] = useState(1);
+  const [phoneHeight, setPhoneHeight] = useState(null);
+
+  const updateScale = () => {
+    if (!phoneRef.current) return;
+    const rect = phoneRef.current.getBoundingClientRect();
+    const naturalHeight = rect.height;
+    if (!phoneHeight) setPhoneHeight(naturalHeight);
+    const available = window.innerHeight - 32; // small padding
+    const newScale = Math.min(1, available / naturalHeight);
+    setScale(newScale);
+  };
+
+  useEffect(() => {
+    updateScale();
+    window.addEventListener('resize', updateScale);
+    return () => window.removeEventListener('resize', updateScale);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div className="relative flex flex-col items-center">
+      {/* Container that reserves the scaled height to avoid cropping */}
+      <div
+        className="relative"
+        style={{ height: phoneHeight ? phoneHeight * scale : 'auto' }}
+      >
+        {/* Scaled phone */}
+        <div
+          ref={phoneRef}
+          style={{ transform: `scale(${scale})`, transformOrigin: 'top center' }}
+          className="relative w-80 bg-gradient-to-b from-gray-800 to-gray-900 rounded-3xl shadow-2xl overflow-hidden border-2 border-gray-700"
+        >
+
+          {/* Top screen frame */}
+          <div className="p-2">
+            <div className="relative">
+              {/* Earpiece */}
+              <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-16 h-1.5 bg-gray-700 rounded-full"></div>
+
+              {/* Camera */}
+              <div className="absolute top-2 left-4 w-2 h-2 bg-gray-700 rounded-full"></div>
+
+              {/* Screen */}
+              <div className="mt-5 h-[25rem] bg-black rounded-2xl p-1 shadow-inner">
+                {renderScreen()}
+              </div>
+            </div>
+          </div>
+
+          {/* Hinge */}
+          <div className="h-2 bg-gradient-to-r from-gray-700 via-gray-600 to-gray-700 border-t border-b border-gray-600"></div>
+
+          {/* Bottom keypad */}
+          <Keypad
+            onMsgClick={handleMsgClick}
+            onEndClick={handleEndClick}
+            onKeyPress={handleKeyPress}
+            onDelete={handleDelete}
+          />
+
+          {/* Shadow and depth effects (moved inside scaled element so they scale together) */}
+          <div className="absolute -inset-1 bg-gradient-to-b from-gray-900 to-black rounded-3xl -z-10 opacity-60"></div>
+          <div className="absolute -inset-2 bg-gradient-to-b from-black to-gray-900 rounded-3xl -z-20 opacity-40"></div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function Home() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+    <div className="w-screen min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-slate-800 via-gray-900 to-black">
+      <div className="absolute top-4 left-4">
+        <p className="text-white text-sm">
+          <strong>Pro Tip:</strong> You can use your computer&apos;s keyboard to type in the message fields.
+        </p>
+      </div>
+      <FlipPhone />
     </div>
   );
 }
