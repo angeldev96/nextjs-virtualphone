@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview"
   },
   "dependencies": {
     "next": "15.5.2",
@@ -19,6 +20,8 @@
     "@tailwindcss/postcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "15.5.2",
-    "tailwindcss": "^4"
+    "tailwindcss": "^4",
+  "@opennextjs/cloudflare": "1.6.5",
+  "wrangler": "^4.24.4"
   }
 }
