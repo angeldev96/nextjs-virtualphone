@@ -25,5 +25,8 @@
     "tailwindcss": "^4",
     "@opennextjs/cloudflare": "1.6.5",
     "wrangler": "^4.24.4"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   }
 }
