@@ -1,13 +1,5 @@
 {
   "cloud": {
     "framework": "nextjs"
-  },
-  "build": {
-    "command": "npm run build",
-    "output": ".next"
-  },
-  "dev": {
-    "command": "npm run dev",
-    "port": 3000
   }
 }

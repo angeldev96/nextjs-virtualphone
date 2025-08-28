@@ -21,7 +21,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.5.2",
     "tailwindcss": "^4",
-  "@opennextjs/cloudflare": "1.6.5",
-  "wrangler": "^4.24.4"
+    "@opennextjs/cloudflare": "1.6.5",
+    "wrangler": "^4.24.4"
   }
 }
