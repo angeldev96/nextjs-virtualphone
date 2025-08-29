@@ -2,12 +2,14 @@
   "name": "nextjs-virtualphone",
   "version": "0.1.0",
   "private": true,
+
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview"
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "build:webflow": "opennextjs-cloudflare build"
   },
   "dependencies": {
     "next": "15.5.2",
@@ -23,5 +25,8 @@
     "tailwindcss": "^4",
     "@opennextjs/cloudflare": "1.6.5",
     "wrangler": "^4.24.4"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   }
 }
