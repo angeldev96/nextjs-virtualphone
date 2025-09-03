@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { getClientHash } from '../lib/getClientHash';
 
 const WEBHOOK_URL = 'https://primary-production-c6fa.up.railway.app/webhook/yiddishjobs-chatbot';
 
@@ -26,12 +27,34 @@ const ComposeMessage = ({
     setMessage('');
 
     try {
-      console.log('[ComposeMessage] Sending payload:', { user_message: trimmed });
       setBotTyping(true);
+
+      // include client_hash for session isolation (frontend generates and sends it)
+      let clientHash = null;
+      try {
+        clientHash = await getClientHash();
+      } catch (err) {
+        console.warn('[ComposeMessage] getClientHash failed', err);
+      }
+
+      const headers = { 'Content-Type': 'application/json' };
+      if (clientHash) headers['x-client-hash'] = clientHash;
+
+      const payload = clientHash ? { client_hash: clientHash, user_message: trimmed } : { user_message: trimmed };
+
+      // build payload and headers
+      // (we log them in detail so it's easy to paste the exact request to Roman / backend)
+      console.log('[ComposeMessage] Preparing to send to webhook', {
+        url: WEBHOOK_URL,
+        payload,
+        headers,
+        note: 'If client_hash is present, backend should use it to isolate session history',
+      });
+
       const res = await fetch(WEBHOOK_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_message: trimmed }),
+        headers,
+        body: JSON.stringify(payload),
       });
 
       console.log('[ComposeMessage] Response status:', res.status, res.statusText);
