@@ -70,23 +70,33 @@ const ComposeMessage = ({
         data = raw;
       }
 
-      // expected format: [ { Message: '...', Sender: 'Bot:' }, ... ]
+      // expected formats:
+      // - array of items (old format): [{ Message, Sender }, ...]
+      // - new object format from backend: { id, session_id, role, message, created_at }
+      const normalizeItem = (item) => {
+        // prefer lowercase 'message' then 'Message', then fallback to string
+        const textField = item?.message ?? item?.Message ?? item?.text ?? item?.Text;
+        const text = typeof textField === 'object' ? JSON.stringify(textField) : (textField ?? String(item));
+        // prefer 'role' (assistant/user) then 'Sender'
+        const roleField = item?.role ?? item?.Sender ?? item?.sender;
+        // convert role to a human sender label
+        const sender = roleField ? (String(roleField).toLowerCase().includes('assist') ? 'Bot' : (String(roleField).toLowerCase().includes('user') ? 'You' : String(roleField))) : 'Bot';
+        return { text, sender };
+      };
+
       if (Array.isArray(data)) {
         const botEntries = data.map((item, idx) => {
           console.log('[ComposeMessage] item from array:', item);
-          return {
-            id: `b-${Date.now()}-${idx}`,
-            text: typeof item.Message === 'object' ? JSON.stringify(item.Message) : (item.Message ?? String(item)),
-            sender: item.Sender ?? 'Bot',
-          };
+          const { text, sender } = normalizeItem(item);
+          return { id: `b-${Date.now()}-${idx}`, text, sender };
         });
         console.log('[ComposeMessage] botEntries:', botEntries);
         setMessages(prev => [...prev, ...botEntries]);
       } else if (data && typeof data === 'object') {
-        // single object response
+        // single object response (new API shape)
         console.log('[ComposeMessage] single object response:', data);
-        const text = data.Message ? (typeof data.Message === 'object' ? JSON.stringify(data.Message) : data.Message) : JSON.stringify(data);
-        setMessages(prev => [...prev, { id: `b-${Date.now()}`, text, sender: data.Sender ?? 'Bot' }]);
+        const { text, sender } = normalizeItem(data);
+        setMessages(prev => [...prev, { id: `b-${Date.now()}`, text, sender }]);
       } else {
         setMessages(prev => [...prev, { id: `b-${Date.now()}`, text: String(data), sender: 'Bot' }]);
       }
